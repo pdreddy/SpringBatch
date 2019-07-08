@@ -59,15 +59,15 @@ import com.damu.demo.springboot.util.VehiclePreparedSmtSetter;
 public class JobConfig {
 	Logger logger = LoggerFactory.getLogger(JobConfig.class);
 
-	@Value("${swm.vehicle.files.path}")
+	@Value("${files.path}")
 	private String resourcesPath;
-	@Value("${swm.vehicle.files.error.path}")
+	@Value("${files.error.path}")
 	private String errorPath;
-	@Value("${swm.vehicle.files.success.path}")
+	@Value("${files.success.path}")
 	private String sucessPath;
-	@Value("${swm.vehicle.files.zip.path}")
+	@Value("${files.zip.path}")
 	private String zipPath;
-	@Value("${swm.vehicle.files.type}")
+	@Value("${files.type}")
 	private String fileType;
 	@Autowired
 	private JobBuilderFactory jobBuilderFactory;
@@ -78,7 +78,7 @@ public class JobConfig {
 	@Autowired
 	private DataSource dataSource;
 
-	@Scheduled(cron = "${spring.batch.job.cron.ffi.expression}")
+	@Scheduled(cron = "${spring.batch.job.cron.expression}")
 	public void ffiSchedule() {
 		try {
 			JobParameters jobParameters = new JobParametersBuilder().addDate("launchDate", new Date())
@@ -88,7 +88,7 @@ public class JobConfig {
 		}
 	}
 
-	@Scheduled(cron = "${spring.batch.job.cron.ffi.zip.expression}")
+	@Scheduled(cron = "${spring.batch.job.cron.zip.expression}")
 	public void ffiZIPSchedule() {
 		try {
 			JobParameters jobParameters = new JobParametersBuilder().addDate("launchDate", new Date())
