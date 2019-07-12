@@ -61,10 +61,10 @@ public class FileZipandDeletingTasklet implements Tasklet {
 		String folderName="";
 		System.err.println(sourceDirectoryPath+"---"+sourceDirectoryPath.contains("error"));
 		if(sourceDirectoryPath.contains("error")) {
-			folderName="factory_feed_ingestion_error_";
+			folderName="zip_error_";
 		}
 		else if(sourceDirectoryPath.contains("success")) {
-			folderName="factory_feed_ingestion_success_";
+			folderName="zip_success_";
 		}
 		Path zipFilePath = Files.createFile(Paths.get(zipPath +folderName +getCurrentTimeStamp() + ".zip"));
 			
