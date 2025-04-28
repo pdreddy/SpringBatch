@@ -1,0 +1,342 @@
+# Spring Boot Project Structure
+```
+src/main/java/com/example/jkscerts/
+├── JksCertsApplication.java
+├── config/
+│   ├── RedisConfig.java
+│   ├── SwaggerConfig.java
+├── controller/
+│   ├── CertController.java
+├── entity/
+│   ├── Certificate.java
+├── repository/
+│   ├── CertificateRepository.java
+├── service/
+│   ├── CertificateService.java
+└── resources/
+    ├── application.properties
+```
+
+# File Contents
+
+## pom.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</group..org</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+        <relativePath/>
+    </parent>
+    <groupId>com.example</groupId>
+    <artifactId>jks-certs</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>jks-certs</name>
+    <description>Spring Boot project for JKS certificate management</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## src/main/java/com/example/jkscerts/JksCertsApplication.java
+```java
+package com.example.jkscerts;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+
+@SpringBootApplication
+@EnableCaching
+public class JksCertsApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(JksCertsApplication.class, args);
+    }
+}
+```
+
+## src/main/java/com/example/jkscerts/config/RedisConfig.java
+```java
+package com.example.jkscerts.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+@Configuration
+public class RedisConfig {
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
+    }
+}
+```
+
+## src/main/java/com/example/jkscerts/config/SwaggerConfig.java
+```java
+package com.example.jkscerts.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+
+@Configuration
+public class SwaggerConfig {
+    @Bean
+    public Docket api() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.example.jkscerts.controller"))
+                .paths(PathSelectors.any())
+                .build()
+                .apiInfo(apiInfo());
+    }
+
+    private springfox.documentation.service.ApiInfo apiInfo() {
+        return new springfox.documentation.service.ApiInfo(
+                "JKS Certificate Management API",
+                "API for uploading and retrieving JKS certificates",
+                "1.0",
+                "Terms of service",
+                new springfox.documentation.service.Contact("Your Name", "your.website", "your.email@example.com"),
+                "License of API",
+                "API license URL",
+                java.util.Collections.emptyList()
+        );
+    }
+}
+```
+
+## src/main/java/com/example/jkscerts/entity/Certificate.java
+```java
+package com.example.jkscerts.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "certificates")
+@Data
+public class Certificate {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "cert_name")
+    private String certName;
+
+    @Lob
+    @Column(name = "cert_content")
+    private byte[] certContent;
+}
+```
+
+## src/main/java/com/example/jkscerts/repository/CertificateRepository.java
+```java
+package com.example.jkscerts.repository;
+
+import com.example.jkscerts.entity.Certificate;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CertificateRepository extends JpaRepository<Certificate, Long> {
+}
+```
+
+## src/main/java/com/example/jkscerts/service/CertificateService.java
+```java
+package com.example.jkscerts.service;
+
+import com.example.jkscerts.entity.Certificate;
+import com.example.jkscerts.repository.CertificateRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+@Service
+@RequiredArgsConstructor
+public class CertificateService {
+
+    private final CertificateRepository certificateRepository;
+
+    @CachePut(value = "certificates", key = "#result.id")
+    public Certificate saveCertificate(MultipartFile file) throws IOException {
+        Certificate certificate = new Certificate();
+        certificate.setCertName(file.getOriginalFilename());
+        certificate.setCertContent(file.getBytes());
+        return certificateRepository.save(certificate);
+    }
+
+    @Cacheable(value = "certificates", key = "#id")
+    public Certificate getCertificate(Long id) {
+        return certificateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+    }
+}
+```
+
+## src/main/java/com/example/jkscerts/controller/CertController.java
+```java
+package com.example.jkscerts.controller;
+
+import com.example.jkscerts.entity.Certificate;
+import com.example.jkscerts.service.CertificateService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/certs")
+@RequiredArgsConstructor
+@Api(tags = "Certificate Management API")
+public class CertController {
+
+    private final CertificateService certificateService;
+
+    @PostMapping("/upload")
+    @ApiOperation(value = "Upload a JKS certificate", notes = "Uploads a JKS certificate file and stores it in the database")
+    public ResponseEntity<Certificate> uploadCertificate(@RequestParam("file") MultipartFile file) throws IOException {
+        Certificate savedCert = certificateService.saveCertificate(file);
+        return ResponseEntity.ok(savedCert);
+    }
+
+    @GetMapping("/{id}")
+    @ApiOperation(value = "Retrieve a JKS certificate", notes = "Retrieves a JKS certificate by its ID")
+    public ResponseEntity<byte[]> getCertificate(@PathVariable Long id) {
+        Certificate certificate = certificateService.getCertificate(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + certificate.getCertName() + "\"")
+                .body(certificate.getCertContent());
+    }
+}
+```
+
+## src/main/resources/application.properties
+```properties
+# H2 Database Configuration
+spring.datasource.url=jdbc:h2:mem:certdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# Redis Configuration
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Swagger Configuration
+springfox.documentation.swagger-ui.enabled=true
+```
+
+# Instructions to Run
+1. Ensure you have Java 17, Maven, and Redis server installed and running locally
+2. Create a new directory and place all files in their respective paths
+3. Run `mvn clean install` to build the project
+4. Start the application with `mvn spring-boot:run`
+5. Access Swagger UI at `http://localhost:8080/swagger-ui/`
+6. Access H2 console at `http://localhost:8080/h2-console`
+7. Use the following API endpoints:
+   - POST `http://localhost:8080/api/certs/upload` (multipart/form-data with file parameter)
+   - GET `http://localhost:8080/api/certs/{id}`
+
+# Notes
+- Added Swagger (Springfox) dependency for API documentation
+- Updated `application.properties` to use `create-drop` for automatic table creation in H2
+- Added `@Table` and `@Column` annotations to `Certificate` entity for explicit table and column naming
+- Enhanced H2 configuration with `DB_CLOSE_DELAY=-1` and `DB_CLOSE_ON_EXIT=FALSE` for persistent in-memory database
+- Added Swagger annotations (`@Api`, `@ApiOperation`) to controller for better documentation
+- The application automatically creates the `certificates` table in H2 on startup
+- Redis caching remains unchanged from previous version
+- Make sure Redis server is running on localhost:6379 (default configuration)
+- Swagger UI provides interactive API documentation and testing interface
